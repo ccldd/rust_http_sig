@@ -2,20 +2,20 @@ use std::fmt::{Debug, Display};
 
 use http::{HeaderName, Request};
 use indexmap::IndexMap;
-use sfv::{BareItem, Dictionary, InnerList, Item, List, ListEntry, Parameters, SerializeValue};
+use sfv::{BareItem, Dictionary, InnerList, Item, ListEntry, Parameters, SerializeValue};
 use thiserror::Error;
 
 use crate::parameters::Parameter;
 
 #[derive(Default)]
-pub struct SignatureBase {
+pub(crate) struct SignatureBase {
     components: IndexMap<String, String>,
     parameters: SignatureParams,
 }
 
 impl SignatureBase {
-    fn from_parts<T>(
-        req: Request<T>,
+    pub(crate) fn from_parts<T>(
+        req: &Request<T>,
         components: &[Component],
         parameters: &[Parameter],
     ) -> Result<Self, SignatureBaseError> {
@@ -54,7 +54,7 @@ impl SignatureBase {
         Ok(sb)
     }
 
-    fn serialize(&self) -> Result<String, SignatureBaseError> {
+    pub(crate) fn serialize(&self) -> Result<String, SignatureBaseError> {
         use std::fmt::Write;
         let mut s = String::new();
 
@@ -139,18 +139,19 @@ pub enum Component {
     Header(HeaderName),
 }
 
+#[cfg(test)]
 mod tests {
     use http::Request;
 
     use crate::parameters::{Created, Parameter};
 
-    use super::{Component, SignatureBase};
+    use super::*;
 
     #[test]
     fn test() {
         let req = Request::get("uri").body(()).unwrap();
         let sb = SignatureBase::from_parts(
-            req,
+            &req,
             &[Component::Derived(super::DerivedComponent::Method)],
             &[Parameter::Created(Created::Now)],
         )
