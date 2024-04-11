@@ -1,4 +1,10 @@
-mod algorithm;
+mod parameters;
 mod sign;
 mod signature_base;
-mod parameters;
+mod verify;
+
+pub use sign::*;
+pub use verify::*;
+
+pub struct WithKey;
+pub struct WithoutKey;
